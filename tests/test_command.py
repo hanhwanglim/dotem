@@ -2,6 +2,7 @@ import os
 import shutil
 from contextlib import contextmanager, suppress
 from pathlib import Path
+from typing import Iterator
 from unittest.mock import patch
 
 from typer.testing import CliRunner
@@ -14,7 +15,7 @@ runner = CliRunner()
 
 
 @contextmanager
-def temporary_copy_file(src: Path, dest: Path) -> None:
+def temporary_copy_file(src: Path, dest: Path) -> Iterator[None]:
     try:
         with suppress(FileNotFoundError):
             os.remove(dest)
