@@ -17,7 +17,9 @@ if sys.version_info >= (3, 11):
 else:
     import tomli as tomllib
 
-app = typer.Typer(help="dotem: A tool for loading dotenv environment variables into your shell.")
+app = typer.Typer(
+    help="dotem: A tool for loading dotenv environment variables into your shell."
+)
 
 
 def parse_booleans(value: Any) -> str:
