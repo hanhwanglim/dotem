@@ -32,7 +32,7 @@ def parse_booleans(value: Any) -> str:
 @app.command()
 def load(
     profile: Annotated[str, typer.Argument(help="Profile to load.")] = "default",
-    path: Annotated[str, typer.Option(help="Dotenv toml path.")] = "./.env.toml",
+    path: Annotated[str, typer.Option(show_default=False, help="Dotenv toml path.")] = ".env.toml",
 ) -> None:
     """Loads the environment variables set in the profile."""
     with open(Path(path), "rb") as f:
@@ -54,7 +54,7 @@ def load(
 @app.command()
 def unload(
     profile: Annotated[str, typer.Argument(help="Profile to unload.")] = "default",
-    path: Annotated[str, typer.Option(help="Dotenv toml path.")] = "./.env.toml",
+    path: Annotated[str, typer.Option(show_default=False, help="Dotenv toml path.")] = ".env.toml",
     unset_all: Annotated[
         Optional[bool],
         typer.Option("--all", help="Unload all environment variables in toml file"),
@@ -86,9 +86,12 @@ def unload(
 
 
 @app.command()
-def edit() -> None:
+def edit(
+    path: Annotated[str, typer.Option(show_default=False, help="Dotenv toml path.")] = ".env.toml",
+    editor: Annotated[Optional[str], typer.Option(show_default=False, help="Editor.")] = None,
+) -> None:
     """Edits the `.env.toml` file in `$EDITOR`"""
-    click.edit(filename=".env.toml")
+    click.edit(editor=editor, filename=path)
 
 
 @app.command()
