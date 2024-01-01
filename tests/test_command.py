@@ -2,6 +2,7 @@ import os
 import shutil
 from contextlib import contextmanager, suppress
 from pathlib import Path
+from unittest.mock import patch
 
 from typer.testing import CliRunner
 
@@ -104,3 +105,10 @@ class TestUnload:
             "unset hello",
             "unset foo\n",
         ]
+
+
+def test_edit() -> None:
+    with patch("dotem.click.edit") as click_patch:
+        result = runner.invoke(app, ["edit"])
+        click_patch.assert_called()
+        assert result.exit_code == 0

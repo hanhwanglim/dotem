@@ -3,6 +3,7 @@ import shlex
 import sys
 from pathlib import Path
 
+import click
 import typer
 import importlib.metadata
 
@@ -82,6 +83,12 @@ def unload(
         walk(config)
 
     print(";".join(environment_variables))
+
+
+@app.command()
+def edit() -> None:
+    """Edits the `.env.toml` file in `$EDITOR`"""
+    click.edit(filename=".env.toml")
 
 
 def version_callback(value: bool) -> None:
