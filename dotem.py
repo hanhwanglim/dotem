@@ -1,3 +1,4 @@
+import os
 import platform
 import shlex
 import sys
@@ -7,8 +8,8 @@ import click
 import typer
 import importlib.metadata
 
-from typing import List, Any, Dict
-from typing_extensions import Annotated, Optional
+from typing import List, Any, Dict, Optional
+from typing_extensions import Annotated
 
 if platform.system() not in ("Linux", "Darwin"):
     raise OSError("Unsupported operating system")
@@ -29,17 +30,48 @@ def parse_booleans(value: Any) -> str:
     return str(value)
 
 
+def find_file() -> Optional[Path]:
+    """Tries to find the `.env.toml` file
+
+    The search order is: cwd -> parent directory -> $XDG_CONFIG_HOME -> $HOME
+    """
+    cwd = Path(os.getcwd())
+    parent = cwd.parent
+    xdg_config_home = Path(
+        os.getenv("XDG_CONFIG_HOME", Path.home() / ".config" / "dotem")
+    )
+    home = Path.home()
+
+    directories: List[Path] = [cwd, parent, xdg_config_home, home]
+
+    for directory in directories:
+        if (directory / ".env.toml").exists():
+            return directory / ".env.toml"
+    raise FileNotFoundError("Unable to find `.env.toml` file")
+
+
+def load_config(path: Optional[str]) -> Dict[str, Any]:
+    try:
+        path = find_file() if path is None else Path(path)
+        with open(path, "rb") as f:
+            return tomllib.load(f)
+    except FileNotFoundError:
+        print("Unable to find `.env.toml` file. Please specify `--path`")
+        raise typer.Exit(1)
+    except tomllib.TOMLDecodeError as exc:
+        print(f"Unable to parse file: {exc}")
+        raise typer.Exit(1)
+
+
 @app.command()
 def load(
     profile: Annotated[str, typer.Argument(help="Profile to load.")] = "default",
     path: Annotated[
-        str, typer.Option(show_default=False, help="Dotenv toml path.")
-    ] = ".env.toml",
+        Optional[str], typer.Option(show_default=False, help="Dotenv toml path.")
+    ] = None,
 ) -> None:
     """Loads the environment variables set in the profile."""
-    with open(Path(path), "rb") as f:
-        config = tomllib.load(f)
-
+    config = load_config(path)
     environment_variables: List[str] = []
 
     for key, value in config.get("global", {}).items():
@@ -57,16 +89,15 @@ def load(
 def unload(
     profile: Annotated[str, typer.Argument(help="Profile to unload.")] = "default",
     path: Annotated[
-        str, typer.Option(show_default=False, help="Dotenv toml path.")
-    ] = ".env.toml",
+        Optional[str], typer.Option(show_default=False, help="Dotenv toml path.")
+    ] = None,
     unset_all: Annotated[
         Optional[bool],
         typer.Option("--all", help="Unload all environment variables in toml file"),
     ] = False,
 ) -> None:
     """Unset the environment variables set in the profile"""
-    with open(Path(path), "rb") as f:
-        config = tomllib.load(f)
+    config = load_config(path)
 
     environment_variables: List[str] = []
 
@@ -92,13 +123,19 @@ def unload(
 @app.command()
 def edit(
     path: Annotated[
-        str, typer.Option(show_default=False, help="Dotenv toml path.")
-    ] = ".env.toml",
+        Optional[str], typer.Option(show_default=False, help="Dotenv toml path.")
+    ] = None,
     editor: Annotated[
         Optional[str], typer.Option(show_default=False, help="Editor.")
     ] = None,
 ) -> None:
     """Edits the `.env.toml` file in `$EDITOR`"""
+    try:
+        path = find_file() if path is None else Path(path)
+    except FileNotFoundError:
+        print("Unable to find `.env.toml` file. Please specify `--path`")
+        raise typer.Exit(1)
+
     click.edit(editor=editor, filename=path)
 
 
