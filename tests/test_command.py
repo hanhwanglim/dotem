@@ -7,6 +7,7 @@ from unittest.mock import patch
 from typer.testing import CliRunner
 
 from dotem import app
+from tests import TEST_DIR
 from tests.data import TEST_DATA
 
 runner = CliRunner()
@@ -112,3 +113,10 @@ def test_edit() -> None:
         result = runner.invoke(app, ["edit"])
         click_patch.assert_called()
         assert result.exit_code == 0
+
+
+def test_hook() -> None:
+    result = runner.invoke(app, ["hook"])
+    assert result.exit_code == 0
+    with open(TEST_DIR.parent / "hook.sh") as f:
+        assert result.output == f.read() + "\n"

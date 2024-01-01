@@ -91,6 +91,13 @@ def edit() -> None:
     click.edit(filename=".env.toml")
 
 
+@app.command()
+def hook() -> None:
+    """Script to help set up the shell hook"""
+    with open(Path(__file__).parent / "hook.sh") as script:
+        print(script.read())
+
+
 def version_callback(value: bool) -> None:
     if not value:
         return
