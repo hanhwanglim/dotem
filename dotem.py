@@ -6,7 +6,7 @@ from pathlib import Path
 import typer
 import importlib.metadata
 
-from typing import List, Any
+from typing import List, Any, Dict
 from typing_extensions import Annotated, Optional
 
 if platform.system() not in ("Linux", "Darwin"):
@@ -54,6 +54,10 @@ def load(
 def unload(
     profile: Annotated[str, typer.Argument(help="Profile to unload.")] = "default",
     path: Annotated[str, typer.Option(help="Dotenv toml path.")] = "./.env.toml",
+    unset_all: Annotated[
+        Optional[bool],
+        typer.Option("--all", help="Unload all environment variables in toml file"),
+    ] = False,
 ) -> None:
     """Unset the environment variables set in the profile"""
     with open(Path(path), "rb") as f:
@@ -61,11 +65,21 @@ def unload(
 
     environment_variables: List[str] = []
 
-    for key in config.get("global", {}):
-        environment_variables.append(f"unset {key}")
+    def walk(obj: Dict[str, Any]):
+        for key, value in obj.items():
+            if isinstance(value, dict):
+                walk(value)
+            else:
+                environment_variables.append(f"unset {key}")
 
-    for key in config[profile]:
-        environment_variables.append(f"unset {key}")
+    if not unset_all:
+        for key in config.get("global", {}):
+            environment_variables.append(f"unset {key}")
+
+        for key in config[profile]:
+            environment_variables.append(f"unset {key}")
+    else:
+        walk(config)
 
     print(";".join(environment_variables))
 

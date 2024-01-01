@@ -82,3 +82,25 @@ class TestUnload:
             "unset glowworm-flashback",
             "unset fidelity-starch\n",
         ]
+
+    def test_unload_all(self) -> None:
+        result = runner.invoke(
+            app, ["unload", "--all", "--path", f"{TEST_DATA / 'data.toml'}"]
+        )
+        assert result.exit_code == 0
+        assert result.output.split(";") == [
+            "unset hate-dandruff",
+            "unset bloomers-handbook",
+            "unset volumes-unruly",
+            "unset companion-esteemed",
+            "unset glowworm-flashback",
+            "unset fidelity-starch",
+            "unset deport-nuzzle",
+            "unset FOLLOW_CYCLING",
+            "unset parchment-blazing",
+            "unset judo-abridge",
+            "unset SECRET_PASSWORD",
+            "unset KEY",
+            "unset hello",
+            "unset foo\n",
+        ]
