@@ -50,6 +50,26 @@ def load(
     print(";".join(environment_variables))
 
 
+@app.command()
+def unload(
+    profile: Annotated[str, typer.Argument(help="Profile to unload.")] = "default",
+    path: Annotated[str, typer.Option(help="Dotenv toml path.")] = "./.env.toml",
+) -> None:
+    """Unset the environment variables set in the profile"""
+    with open(Path(path), "rb") as f:
+        config = tomllib.load(f)
+
+    environment_variables: List[str] = []
+
+    for key in config.get("global", {}):
+        environment_variables.append(f"unset {key}")
+
+    for key in config[profile]:
+        environment_variables.append(f"unset {key}")
+
+    print(";".join(environment_variables))
+
+
 def version_callback(value: bool) -> None:
     if not value:
         return

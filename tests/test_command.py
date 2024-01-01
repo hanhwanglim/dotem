@@ -13,14 +13,15 @@ runner = CliRunner()
 
 @contextmanager
 def temporary_copy_file(src: Path, dest: Path) -> None:
-    with suppress(FileNotFoundError):
-        os.remove(dest)
+    try:
+        with suppress(FileNotFoundError):
+            os.remove(dest)
 
-    shutil.copyfile(src, dest)
-    yield
-
-    with suppress(FileNotFoundError):
-        os.remove(dest)
+        shutil.copyfile(src, dest)
+        yield
+    finally:
+        with suppress(FileNotFoundError):
+            os.remove(dest)
 
 
 class TestLoad:
@@ -50,4 +51,34 @@ class TestLoad:
             "export companion-esteemed=0.95",
             "export glowworm-flashback=a",
             "export fidelity-starch=true\n",
+        ]
+
+
+class TestUnload:
+    def test_unload_default(self) -> None:
+        src = TEST_DATA / "data.toml"
+        dest = Path(os.getcwd()) / ".env.toml"
+
+        with temporary_copy_file(src, dest):
+            result = runner.invoke(app, ["unload"])
+            assert result.exit_code == 0
+            assert result.output.split(";") == [
+                "unset hate-dandruff",
+                "unset bloomers-handbook",
+                "unset volumes-unruly",
+                "unset companion-esteemed",
+                "unset glowworm-flashback",
+                "unset fidelity-starch\n",
+            ]
+
+    def test_unload_default_with_path(self) -> None:
+        result = runner.invoke(app, ["unload", "--path", f"{TEST_DATA / 'data.toml'}"])
+        assert result.exit_code == 0
+        assert result.output.split(";") == [
+            "unset hate-dandruff",
+            "unset bloomers-handbook",
+            "unset volumes-unruly",
+            "unset companion-esteemed",
+            "unset glowworm-flashback",
+            "unset fidelity-starch\n",
         ]
