@@ -4,6 +4,7 @@ version = "0.1.0"
 description = ""
 authors = ["Han Hwang Lim <hanhwanglim@gmail.com>"]
 readme = "README.md"
+include = ["hook.sh"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -15,7 +16,7 @@ ruff = "^0.1.9"
 pytest = "^7.4.4"
 
 [tool.poetry.scripts]
-dotem = "dotem:app"
+dotem-cli = "dotem:main"
 
 [build-system]
 requires = ["poetry-core"]
