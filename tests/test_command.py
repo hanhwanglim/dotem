@@ -3,7 +3,7 @@ import shutil
 from contextlib import contextmanager, suppress
 from pathlib import Path
 from typing import Iterator
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 from typer.testing import CliRunner
 
@@ -165,11 +165,16 @@ class TestUnload:
         ]
 
 
-def test_edit() -> None:
-    with patch("dotem.click.edit") as click_patch:
+@patch("dotem.click.edit")
+def test_edit(edit_patch: MagicMock) -> None:
+    src = TEST_DATA / "data.toml"
+    dest = Path(os.getcwd()) / ".env.toml"
+
+    with temporary_copy_file(src, dest):
         result = runner.invoke(app, ["edit"])
-        click_patch.assert_called()
-        assert result.exit_code == 0
+
+    edit_patch.assert_called()
+    assert result.exit_code == 0
 
 
 def test_hook() -> None:
