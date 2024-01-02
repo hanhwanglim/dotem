@@ -73,7 +73,9 @@ class TestLoad:
             ]
 
     def test_load_group_a_with_path(self) -> None:
-        result = runner.invoke(app, ["load", "group-a", "--path", f"{TEST_DATA / 'data.toml'}"])
+        result = runner.invoke(
+            app, ["load", "group-a", "--path", f"{TEST_DATA / 'data.toml'}"]
+        )
         assert result.exit_code == 0
         assert result.output.split(";") == [
             "export hate-dandruff=false",
@@ -82,6 +84,40 @@ class TestLoad:
             "export companion-esteemed=0.95",
             "export deport-nuzzle='lorem ipsum'",
             "export FOLLOW_CYCLING=10\n",
+        ]
+
+    def test_load_subgroup_1(self) -> None:
+        src = TEST_DATA / "data.toml"
+        dest = Path(os.getcwd()) / ".env.toml"
+
+        with temporary_copy_file(src, dest):
+            result = runner.invoke(app, ["load", "group-b.subgroup-1"])
+            assert result.exit_code == 0
+            assert result.output.split(";") == [
+                "export hate-dandruff=false",
+                "export bloomers-handbook='awake lifting decrease grid'",
+                "export volumes-unruly=15",
+                "export companion-esteemed=0.95",
+                "export parchment-blazing='HELLO WORLD'",
+                "export judo-abridge=true",
+                "export SECRET_PASSWORD=password",
+                "export KEY=VALUE\n",
+            ]
+
+    def test_load_subgroup_2_with_path(self) -> None:
+        result = runner.invoke(
+            app, ["load", "group-b.subgroup-2", "--path", f"{TEST_DATA / 'data.toml'}"]
+        )
+        assert result.exit_code == 0
+        assert result.output.split(";") == [
+            "export hate-dandruff=false",
+            "export bloomers-handbook='awake lifting decrease grid'",
+            "export volumes-unruly=15",
+            "export companion-esteemed=0.95",
+            "export parchment-blazing='HELLO WORLD'",
+            "export judo-abridge=true",
+            "export hello=world",
+            "export foo=bar\n",
         ]
 
 
@@ -131,7 +167,9 @@ class TestUnload:
             ]
 
     def test_unload_group_a_with_path(self) -> None:
-        result = runner.invoke(app, ["unload", "group-a", "--path", f"{TEST_DATA / 'data.toml'}"])
+        result = runner.invoke(
+            app, ["unload", "group-a", "--path", f"{TEST_DATA / 'data.toml'}"]
+        )
         assert result.exit_code == 0
         assert result.output.split(";") == [
             "unset hate-dandruff",

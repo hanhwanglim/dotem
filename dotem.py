@@ -2,6 +2,7 @@ import os
 import platform
 import shlex
 import sys
+from collections import namedtuple
 from pathlib import Path
 
 import click
@@ -22,6 +23,8 @@ else:
 app = typer.Typer(
     help="dotem: A tool for loading dotenv environment variables into your shell."
 )
+
+EnvironmentVariable = namedtuple("EnvironmentVariable", ["key", "value"])
 
 
 def parse_booleans(value: Any) -> str:
@@ -63,25 +66,47 @@ def load_config(path: Optional[str]) -> Dict[str, Any]:
         raise typer.Exit(1)
 
 
+def load_variables(
+    config: Dict[str, Any], profile: List[str]
+) -> List[EnvironmentVariable]:
+    variables: List[EnvironmentVariable] = []
+
+    for key, value in config.pop("global", {}).items():
+        variables.append(EnvironmentVariable(key, shlex.quote(parse_booleans(value))))
+
+    def walk(_config: Dict[str, Any], _profile: Optional[List[str]]) -> None:
+        for _key, _value in _config.items():
+            if not isinstance(_value, dict):
+                variables.append(
+                    EnvironmentVariable(_key, shlex.quote(parse_booleans(_value)))
+                )
+            elif _profile is None:
+                walk(_value, _profile)
+            elif _profile[0] == _key:
+                walk(_value, profile[1:])
+
+    walk(config, profile)
+    return variables
+
+
 @app.command()
 def load(
     profile: Annotated[str, typer.Argument(help="Profile to load.")] = "default",
     path: Annotated[
         Optional[str], typer.Option(show_default=False, help="Dotenv toml path.")
     ] = None,
+    set_all: Annotated[
+        Optional[bool],
+        typer.Option("--all", help="Load all environment variables in toml file."),
+    ] = False,
 ) -> None:
     """Loads the environment variables set in the profile."""
     config = load_config(path)
-    environment_variables: List[str] = []
-
-    for key, value in config.get("global", {}).items():
-        export = f"export {key}={shlex.quote(parse_booleans(value))}"
-        environment_variables.append(export)
-
-    for key, value in config[profile].items():
-        export = f"export {key}={shlex.quote(parse_booleans(value))}"
-        environment_variables.append(export)
-
+    profile = None if set_all else profile.split(".")
+    environment_variables = load_variables(config, profile)
+    environment_variables = [
+        f"export {key}={value}" for key, value in environment_variables
+    ]
     print(";".join(environment_variables))
 
 
@@ -93,30 +118,14 @@ def unload(
     ] = None,
     unset_all: Annotated[
         Optional[bool],
-        typer.Option("--all", help="Unload all environment variables in toml file"),
+        typer.Option("--all", help="Unload all environment variables in toml file."),
     ] = False,
 ) -> None:
     """Unset the environment variables set in the profile"""
     config = load_config(path)
-
-    environment_variables: List[str] = []
-
-    def walk(obj: Dict[str, Any]):
-        for key, value in obj.items():
-            if isinstance(value, dict):
-                walk(value)
-            else:
-                environment_variables.append(f"unset {key}")
-
-    if not unset_all:
-        for key in config.get("global", {}):
-            environment_variables.append(f"unset {key}")
-
-        for key in config[profile]:
-            environment_variables.append(f"unset {key}")
-    else:
-        walk(config)
-
+    profile = None if unset_all else profile.split(".")
+    environment_variables = load_variables(config, profile)
+    environment_variables = [f"unset {key}" for key, _ in environment_variables]
     print(";".join(environment_variables))
 
 
