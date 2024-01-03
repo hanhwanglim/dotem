@@ -20,6 +20,7 @@ jobs:
       - name: Store the distribution packages
         uses: actions/upload-artifact@v3
         with:
+          name: artifact
           path: dist/
   publish:
     name: Publish to PyPI
@@ -36,9 +37,12 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v3
         with:
+          name: artifact
           path: dist/
       - name: Publish distribution to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          skip-existing: true
   github-release:
     name: Create GitHub Release
     needs:
@@ -51,6 +55,7 @@ jobs:
       - name: Download all the dists
         uses: actions/download-artifact@v3
         with:
+          name: artifact
           path: dist/
       - name: Sign the dists with Sigstore
         uses: sigstore/gh-action-sigstore-python@v1.2.3
