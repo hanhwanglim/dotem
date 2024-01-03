@@ -1,5 +1,6 @@
 import os
 import platform
+import re
 import shlex
 import sys
 from collections import namedtuple
@@ -26,11 +27,17 @@ app = typer.Typer(
 
 EnvironmentVariable = namedtuple("EnvironmentVariable", ["key", "value"])
 
+SHELL_VARIABLE_REGEX = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
+
 
 def parse_booleans(value: Any) -> str:
     if isinstance(value, bool):
         return "true" if value else "false"
     return str(value)
+
+
+def validate_env_var(env_var: EnvironmentVariable) -> bool:
+    return bool(re.match(SHELL_VARIABLE_REGEX, env_var.key))
 
 
 def find_file() -> Optional[Path]:
@@ -86,6 +93,11 @@ def load_variables(
                 walk(_value, profile[1:])
 
     walk(config, profile)
+
+    for variable in variables:
+        if not validate_env_var(variable):
+            raise ValueError(f"Invalid environment variable: {variable.key}")
+
     return variables
 
 
@@ -102,8 +114,17 @@ def load(
 ) -> None:
     """Loads the environment variables set in the profile."""
     config = load_config(path)
+
+    if profile is None:
+        profile = "default"
     profile = None if set_all else profile.split(".")
-    environment_variables = load_variables(config, profile)
+
+    try:
+        environment_variables = load_variables(config, profile)
+    except ValueError as exc:
+        print(exc)
+        raise typer.Exit(1)
+
     environment_variables = [
         f"export {key}={value}" for key, value in environment_variables
     ]
@@ -123,8 +144,17 @@ def unload(
 ) -> None:
     """Unset the environment variables set in the profile"""
     config = load_config(path)
+
+    if profile is None:
+        profile = "default"
     profile = None if unset_all else profile.split(".")
-    environment_variables = load_variables(config, profile)
+
+    try:
+        environment_variables = load_variables(config, profile)
+    except ValueError as exc:
+        print(exc)
+        raise typer.Exit(1)
+
     environment_variables = [f"unset {key}" for key, _ in environment_variables]
     print(";".join(environment_variables))
 
