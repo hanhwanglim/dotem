@@ -24,8 +24,8 @@ project/
 dotem was created with the following motivations:
 
 - Simplicity: Provide a straightforward solution for loading environment variables, reducing the complexity of managing configurations using a single file `.env.toml`.
-- Consistency: Establish a consistent approach to handling environment variables across projects, using a standardized .env.toml file format.
-- Ease of Use: Make it easy for developers to set up their development environment by simply creating a configuration file and loading variables with a single function call.
+- Consistency: Establish a consistent approach to handling environment variables across projects, using a standardized `.env.toml` file format.
+- Ease of Use: Make it easy for developers to "source" their environment variables in a single command call.
 
 ## Installation
 
