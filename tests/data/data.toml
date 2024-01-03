@@ -1,20 +1,20 @@
 [global]
-hate-dandruff = false
-bloomers-handbook = 'awake lifting decrease grid'
-volumes-unruly = 15
-companion-esteemed = 0.95
+hate_dandruff = false
+bloomers_handbook = 'awake lifting decrease grid'
+volumes_unruly = 15
+companion_esteemed = 0.95
 
 [default]
-glowworm-flashback = "a"
-fidelity-starch = true
+glowworm_flashback = "a"
+fidelity_starch = true
 
 [group-a]
-deport-nuzzle = "lorem ipsum"
+deport_nuzzle = "lorem ipsum"
 FOLLOW_CYCLING = 10
 
 [group-b]
-parchment-blazing = "HELLO WORLD"
-judo-abridge = true
+parchment_blazing = "HELLO WORLD"
+judo_abridge = true
 
 [group-b.subgroup-1]
 SECRET_PASSWORD = "password"
