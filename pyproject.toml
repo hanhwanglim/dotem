@@ -15,9 +15,31 @@ typer = {extras = ["all"], version = "^0.9.0"}
 ruff = "^0.1.9"
 pytest = "^7.4.4"
 mypy = "^1.8.0"
+tox = "^4.11.4"
 
 [tool.poetry.scripts]
 dotem-cli = "dotem:main"
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+env_list =
+    py{38,39,310,311,312}
+isolated_build = true
+
+[testenv]
+description = Run pytest
+deps = pytest>=6
+commands = pytest {tty:--color=yes} {posargs}
+
+[gh]
+python =
+    3.12 = py312
+    3.11 = py311, type
+    3.10 = py310
+    3.9 = py39
+    3.8 = py38
+"""
 
 [build-system]
 requires = ["poetry-core"]
