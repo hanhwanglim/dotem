@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "dotem"
-version = "0.1.0"
-description = ""
+version = "0.1.1"
+description = "An environment variable loader for your shell"
 license = "MIT"
 authors = ["Han Hwang Lim <hanhwanglim@gmail.com>"]
 readme = "README.md"
