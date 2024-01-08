@@ -1,7 +1,7 @@
 dotem() {
   result=$("dotem-cli" "$@")
 
-  if [[ $result == "export "* ]]; then
+  if [[ $result == "export "* || $result == "unset "* ]]; then
     eval "$result"
   else
     echo "$result"
