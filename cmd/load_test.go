@@ -125,6 +125,20 @@ func TestLoadCmd(t *testing.T) {
 		assert.NoError(t, cmd.Execute())
 
 		outputStr := output.String()
-		assert.Equal(t, outputStr, "export key1=\"value1\" key2=\"value2\" key3=\"value3\"")
+		parts := strings.Split(outputStr, " ")
+
+		partsMap := make(map[string]struct{})
+		for _, part := range parts {
+			partsMap[part] = struct{}{}
+		}
+
+		assert.Len(t, parts, 4)
+		assert.Equal(t, partsMap, map[string]struct{}{
+			"export":          {},
+			"key1=\"value1\"": {},
+			"key2=\"value2\"": {},
+			"key3=\"value3\"": {},
+		})
+
 	})
 }
