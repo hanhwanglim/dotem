@@ -14,6 +14,15 @@ import (
 
 type Config map[string]any
 
+type EnvVar struct {
+	Key   string
+	Value string
+}
+
+func (ev EnvVar) String() string {
+	return fmt.Sprintf("%v=\"%v\"", ev.Key, ev.Value)
+}
+
 var configPath string
 
 var loadCmd = &cobra.Command{
@@ -34,19 +43,27 @@ var loadCmd = &cobra.Command{
 
 		parts := strings.Split(profile, ".")
 		envVars := resolveEnvVars(config, parts)
+
+		ev := make([]string, 0)
 		for key, value := range envVars {
-			fmt.Printf("export %s=\"%v\"\n", key, value)
+			ev = append(ev, EnvVar{key, value}.String())
 		}
+
+		cmd.Printf("export %v", strings.Join(ev, " "))
 	},
 }
 
-func resolveEnvVars(config Config, profile []string) map[string]any {
-	envVars := make(map[string]any)
+func resolveEnvVars(config Config, profile []string) map[string]string {
+	envVars := make(map[string]string)
 	tables := make([]map[string]any, 0)
 
 	for key, value := range config {
 		if _, isTable := value.(map[string]any); !isTable {
-			envVars[key] = value
+			if _, isString := value.(string); !isString {
+				log.Fatalf("Value %v for key %v is not string\n", value, key)
+			}
+
+			envVars[key] = value.(string)
 			continue
 		}
 
