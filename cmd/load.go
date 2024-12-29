@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"maps"
+	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/BurntSushi/toml"
@@ -59,6 +61,27 @@ func resolveEnvVars(config Config, profile []string) map[string]any {
 	}
 
 	return envVars
+}
+
+func resolveConfigPath(path string) string {
+	if path != "" {
+		return path
+	}
+
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatalln("Error determining working directory:", err)
+	}
+	configPath := filepath.Join(wd, "dotem.toml")
+	if _, err := os.Stat(configPath); err == nil {
+		return configPath
+	}
+
+	homeDir, err := os.UserHomeDir()
+	if err != nil {
+		log.Fatalln("Error determining home directory:", err)
+	}
+	return filepath.Join(homeDir, "dotem.toml")
 }
 
 func init() {
