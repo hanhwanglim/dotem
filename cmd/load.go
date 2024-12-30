@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"maps"
 	"os"
 	"path/filepath"
@@ -37,13 +36,14 @@ var loadCmd = &cobra.Command{
 
 		var config Config
 
-		configPath = resolveConfigPath(configPath)
+		configPath = resolveConfigPath(cmd, configPath)
 		if _, err := toml.DecodeFile(configPath, &config); err != nil {
-			log.Fatalf("Error reading TOML file: %v\n", err)
+			cmd.PrintErrf("Error reading TOML file: %v\n", err)
+			os.Exit(1)
 		}
 
 		parts := strings.Split(profile, ".")
-		envVars := resolveEnvVars(config, parts)
+		envVars := resolveEnvVars(cmd, config, parts)
 
 		ev := make([]string, 0)
 		for key, value := range envVars {
@@ -54,14 +54,16 @@ var loadCmd = &cobra.Command{
 	},
 }
 
-func resolveEnvVars(config Config, profile []string) map[string]string {
+func resolveEnvVars(cmd *cobra.Command, config Config, profile []string) map[string]string {
 	envVars := make(map[string]string)
 	tables := make([]map[string]any, 0)
+	isProfileValid := false
 
 	for key, value := range config {
 		if _, isTable := value.(map[string]any); !isTable {
 			if _, isString := value.(string); !isString {
-				log.Fatalf("Value %v for key %v is not string\n", value, key)
+				cmd.PrintErrf("Value %v for key %v is not string\n", value, key)
+				os.Exit(1)
 			}
 
 			envVars[key] = value.(string)
@@ -75,20 +77,27 @@ func resolveEnvVars(config Config, profile []string) map[string]string {
 
 	// Keys in the subtable should take precedence over the ones in the main table.
 	for _, value := range tables {
-		maps.Copy(envVars, resolveEnvVars(value, profile[1:]))
+		isProfileValid = true
+		maps.Copy(envVars, resolveEnvVars(cmd, value, profile[1:]))
+	}
+
+	if !isProfileValid {
+		cmd.PrintErrf("Profile %v not found in configuration\n", strings.Join(profile, "."))
+		os.Exit(1)
 	}
 
 	return envVars
 }
 
-func resolveConfigPath(path string) string {
+func resolveConfigPath(cmd *cobra.Command, path string) string {
 	if path != "" {
 		return path
 	}
 
 	wd, err := os.Getwd()
 	if err != nil {
-		log.Fatalln("Error determining working directory:", err)
+		cmd.PrintErrln("Error determining working directory:", err)
+		os.Exit(1)
 	}
 	configPath := filepath.Join(wd, "dotem.toml")
 	if _, err := os.Stat(configPath); err == nil {
@@ -97,7 +106,8 @@ func resolveConfigPath(path string) string {
 
 	homeDir, err := os.UserHomeDir()
 	if err != nil {
-		log.Fatalln("Error determining home directory:", err)
+		cmd.PrintErrln("Error determining home directory:", err)
+		os.Exit(1)
 	}
 	return filepath.Join(homeDir, "dotem.toml")
 }
