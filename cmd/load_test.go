@@ -132,9 +132,8 @@ func TestLoadCmd(t *testing.T) {
 			partsMap[part] = struct{}{}
 		}
 
-		assert.Len(t, parts, 4)
+		assert.Len(t, parts, 3)
 		assert.Equal(t, partsMap, map[string]struct{}{
-			"export":          {},
 			"key1=\"value1\"": {},
 			"key2=\"value2\"": {},
 			"key3=\"value3\"": {},

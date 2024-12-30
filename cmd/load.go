@@ -37,6 +37,7 @@ var loadCmd = &cobra.Command{
 
 		var config Config
 
+		configPath = resolveConfigPath(configPath)
 		if _, err := toml.DecodeFile(configPath, &config); err != nil {
 			log.Fatalf("Error reading TOML file: %v\n", err)
 		}
@@ -49,7 +50,7 @@ var loadCmd = &cobra.Command{
 			ev = append(ev, EnvVar{key, value}.String())
 		}
 
-		cmd.Printf("export %v", strings.Join(ev, " "))
+		cmd.Printf("%v", strings.Join(ev, " "))
 	},
 }
 
@@ -103,5 +104,5 @@ func resolveConfigPath(path string) string {
 
 func init() {
 	rootCmd.AddCommand(loadCmd)
-	loadCmd.Flags().StringVarP(&configPath, "config", "c", "dotem.toml", "Path to the TOML configuration file")
+	loadCmd.Flags().StringVarP(&configPath, "config", "c", "", "Path to the TOML configuration file")
 }
